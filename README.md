@@ -1,8 +1,8 @@
-📘 Project Contextualizer Pipeline — README.md
+# 📘 Project Contextualizer Pipeline — README.md
 
 An end-to-end extraction, parsing, embedding, and semantic search pipeline for construction & real-estate documents built with Django, Prefect 3, PostgreSQL, ChromaDB, and Sentence Transformers.
 
-🏗️ 1. Overview
+## 🏗️ 1. Overview
 
 This project provides a full pipeline to:
 
@@ -22,7 +22,7 @@ Expose a Semantic Search API (/search/?q=)
 
 ⚡ It combines Django (web + DB), Prefect 3 (orchestration), Chroma (vector DB), and Sentence Transformers (embeddings).
 
-📂 2. Project Structure
+## 📂 2. Project Structure
 project_contextualizer/
 │
 ├── core/                 # Models, parsers, vector store
@@ -33,7 +33,7 @@ project_contextualizer/
 ├── manage.py
 └── requirements.txt
 
-🛠️ 3. Requirements
+## 🛠️ 3. Requirements
 Install Python & system packages
 sudo apt update
 sudo apt install python3.12 python3.12-venv python3-dev build-essential
@@ -46,9 +46,9 @@ source .venv/bin/activate
 Install dependencies
 pip install -r requirements.txt
 
-🔐 4. Configure API Keys
+## 🔐 4. Configure API Keys
 
-## 🔐 Environment Variables
+### 🔐 Environment Variables
 
 All secrets must be stored in a `.env` file at the project root:
 
@@ -58,7 +58,7 @@ DATALAB_KEY → used internally during parsing & utilities (Currently, markdown 
 
 🔒 Do not commit secrets. Use environment variables in production.
 
-🗄️ 5. Setup PostgreSQL
+## 🗄️ 5. Setup PostgreSQL
 Create user & database
 sudo -u postgres psql
 
@@ -85,7 +85,7 @@ DATABASES = {
     }
 }
 
-🧱 6. Initialize Database
+## 🧱 6. Initialize Database
 python manage.py makemigrations
 python manage.py migrate
 
@@ -94,7 +94,7 @@ Create admin user:
 
 python manage.py createsuperuser
 
-🤖 7. Running the Extraction Pipeline (Prefect 3)
+## 🤖 7. Running the Extraction Pipeline (Prefect 3)
 
 This project includes a Prefect flow:
 
@@ -124,7 +124,7 @@ Inserts structured entities into PostgreSQL
 
 Generates chunks + embeddings into ChromaDB
 
-📸 8. Screenshots (Placeholders)
+## 📸 8. Screenshots (Placeholders)
 
 Add actual screenshots when running the project.
 
@@ -143,7 +143,7 @@ Add actual screenshots when running the project.
 📌 Screenshot 6: Semantic Search JSON API Response
 ![alt text](<Screenshot from 2025-11-20 02-28-59.png>)
 
-🔍 9. Semantic Search API
+## 🔍 9. Semantic Search API
 
 After running the extraction flow, start Django:
 
@@ -175,7 +175,7 @@ There is also a search UI:
 
 http://127.0.0.1:8000/search-ui/
 
-🧪 10. Running Tests
+## 🧪 10. Running Tests
 
 Tests use pytest + pytest-django.
 
@@ -192,7 +192,7 @@ CostItem parser test (test_cost_items.py)
 
 Search API test (test_search_api.py)
 
-🧹 11. Clearing Data Between Runs
+## 🧹 11. Clearing Data Between Runs
 Clear PostgreSQL
 python manage.py shell
 
@@ -212,7 +212,7 @@ from django.conf import settings
 
 shutil.rmtree(os.path.join(settings.BASE_DIR, "chroma_storage"), ignore_errors=True)
 
-🚀 12. Optional: Deploy Prefect Deployment
+## 🚀 12. Optional: Deploy Prefect Deployment
 
 Create a deployment:
 
@@ -224,7 +224,7 @@ Run:
 
 prefect deployment run 'extract_documents_flow/ingestion'
 
-🧩 13. Folder Requirements for Parsing
+## 🧩 13. Folder Requirements for Parsing
 
 Ensure these files exist under /sample_docs/:
 
@@ -238,7 +238,7 @@ Costing requires matching .md files:
 
 Construction planning and costing.md
 
-🎉 14. You’re Ready!
+## 🎉 14. You’re Ready!
 
 You now have a fully working:
 
