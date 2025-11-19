@@ -1,0 +1,24 @@
+# Python
+/__pycache__
+*.py[cod]
+*.pyo
+/.pytest_cache
+
+# Virtualenv
+/.venv
+/.env
+
+# Django
+/db.sqlite3
+
+# IDE
+/.vscode
+/.idea
+
+# Chroma storage
+/chroma_storage
+
+# Logs
+*.log
+Founding Data_Engineer_Technical Challenge.docx
+.~lock.Founding Data_Engineer_Technical Challenge.docx#
