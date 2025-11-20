@@ -1,4 +1,4 @@
-# 📘 Project Contextualizer Pipeline — README.md
+# 📘 Project Contextualizer Pipeline
 
 An end-to-end extraction, parsing, embedding, and semantic search pipeline for construction & real-estate documents built with Django, Prefect 3, PostgreSQL, ChromaDB, and Sentence Transformers.
 
