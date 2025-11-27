@@ -5,6 +5,7 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 from django.conf import settings
 
+
 CHROMA_DIR = os.path.join(getattr(settings, "BASE_DIR", "."), "chroma_storage")
 
 _client = None
@@ -24,7 +25,7 @@ def get_chroma_collection():
     if _client is None:
         _client = chromadb.PersistentClient(path=CHROMA_DIR)
     if _collection is None:
-        _collection = _client.get_or_create_collection(name="project_docs")
+        _collection = _client.get_or_create_collection(name="project_docs")  
     return _collection
 
 
@@ -46,13 +47,11 @@ def add_chunks_to_chroma(document_id: int, chunks: List[str],
     for order, cid in enumerate(ids):
         base = {"document_id": str(document_id), "order": str(order),}
         if metadata:
-            base.update(metadata)
+            base.update(metadata)  # adding new key-value pairs or updating existing ones
         docs_metadata.append(base)
+    collection.upsert(ids=ids, documents=chunks, metadatas=docs_metadata, embeddings=embeddings)
 
-    collection.add(ids=ids, documents=chunks, metadatas=docs_metadata,
-                   embeddings=embeddings)
-
-    return list(zip(ids, chunks))
+    return list(zip(ids, embeddings, chunks))
 
 
 def search_similar(query: str, n_results: int = 5):
@@ -61,3 +60,4 @@ def search_similar(query: str, n_results: int = 5):
     q_emb = model.encode([query], convert_to_numpy=True).tolist()
     res = collection.query(query_embeddings=q_emb, n_results=n_results)
     return res
+

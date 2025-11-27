@@ -1,19 +1,19 @@
-from django.db import models
-
+from django.db import models  # imports Django’s entire ORM model system
+import hashlib
 
 class Document(models.Model):
     DOC_TYPES = [("SCHEDULE", "Project Schedule"),
                  ("COSTING", "Construction Planning & Costing"),
-                 ("URA_GFA", "URA GFA Circular"),
-                 ("APPROVAL_FLOW", "Construction Approvals Flow")]
+                 ("URA", "URA GFA Circular"),
+                 ("APPROVALS", "Construction Approvals Flow")]
 
     doc_type = models.CharField(max_length=32, choices=DOC_TYPES)
     name = models.CharField(max_length=255)
-    path = models.FilePathField(path="", max_length=500)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    path = models.FilePathField(path="", max_length=500)  
+    uploaded_at = models.DateTimeField(auto_now_add=True) 
 
     def __str__(self):
-        return f"{self.name} ({self.doc_type})"
+        return f"{self.name} ({self.doc_type})"  
 
 
 class ScheduleTask(models.Model):
@@ -62,10 +62,9 @@ class RegulationClause(models.Model):
 
 
 class ProcessStep(models.Model):
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE) 
     step_id = models.CharField(max_length=64, db_index=True)
     name = models.CharField(max_length=255)
-    actor = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     predecessor_step_ids = models.CharField(max_length=255, blank=True)
 
@@ -84,9 +83,18 @@ class TextChunk(models.Model):
     chunk_id = models.CharField(max_length=64, unique=True)
     order = models.IntegerField()
     text = models.TextField()
+    text_hash = models.CharField(max_length=32, editable=False, db_index=True, default="")  # 32 characters, 16 bytes; Admin users cannot see or modify text_hash
     embedding_dim = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [models.Index(fields=["document", "text_hash"])]
+
+    #  ANYTIME TextChunk.save() is called — from anywhere — the correct hash is automatically generated.
+    def save(self, *args, **kwargs):
+        self.text_hash = hashlib.md5(self.text.encode("utf-8")).hexdigest()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.document_id}:{self.chunk_id}"
+        return f"Chunk ID:{self.chunk_id}"
 

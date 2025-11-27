@@ -2,6 +2,7 @@ import datetime as dt
 from typing import Tuple
 import os
 import sys
+import hashlib
 import contextlib
 import pdfplumber
 import camelot
@@ -18,6 +19,7 @@ def parse_date(raw: str | None) -> dt.date | None:
     date_part = parts[-1]
     for fmt in ("%m/%d/%y", "%m/%d/%Y"):
         try:
+            # .strptime converts a string to a datetime
             return dt.datetime.strptime(date_part, fmt).date()
         except Exception:
             continue
@@ -45,8 +47,8 @@ def parse_schedule_document(doc: Document):
                 
                 words = page.extract_words()
 
-                # Find first "Finish"
-                finish_word = next((w for w in words if w["text"] == "Finish"), None)
+                # Find first "Finish", next() takes the first item produced by the generator
+                finish_word = next((w for w in words if w["text"] == "Finish"), None)  
 
                 # Find last "days"
                 days_words = [w for w in words if w["text"] == "days"]
@@ -99,9 +101,13 @@ def parse_schedule_document(doc: Document):
     
     chunk_pairs = add_chunks_to_chroma(doc.id, chunks, metadata={"doc_type": doc.doc_type})
 
-    for order, (cid, ctext) in enumerate(chunk_pairs):
-        TextChunk.objects.create(document=doc, chunk_id=cid, order=order, text=ctext,
-                                 embedding_dim=len(chunk_pairs[0][1]) if chunk_pairs else 0,)
+    for order, (cid, cemb, ctext) in enumerate(chunk_pairs):
+        hashval = hashlib.md5(ctext.encode("utf-8")).hexdigest()
+        TextChunk.objects.update_or_create(document=doc,
+                                           text_hash=hashval,
+                                           defaults={'chunk_id':cid,
+                                                     'order':order,
+                                                     'text':ctext,
+                                                     'embedding_dim':len(cemb)})
 
     return task_created, len(chunks)
-

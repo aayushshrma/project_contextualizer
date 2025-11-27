@@ -1,5 +1,7 @@
+import os
 import re
 import json
+import hashlib
 from typing import Dict, List, Tuple, Any
 import pdfplumber
 from core.parsers.utils import convert_to_markdown
@@ -8,7 +10,7 @@ from core.models import Document, ProcessStep, TextChunk
 from core.vectorstore import add_chunks_to_chroma
 
 
-def parse_markdown_sections(path: str):
+def parse_markdown_sections(path: str):  # chunk by sections
 
     sections = {}
     current_heading = None
@@ -38,7 +40,11 @@ def parse_markdown_sections(path: str):
 
 def parse_approvals_flow(doc: Document) -> Tuple[int, int]:
     
-    sections = parse_markdown_sections(path=doc.path.replace(".pdf", ".md"))
+    filepath = doc.path.replace(".pdf", ".md")
+    if not os.path.exists(filepath):
+        filepath = convert_to_markdown(path_=doc.path)
+        
+    sections = parse_markdown_sections(filepath)
 
     steps_id = 1
     chunks = []
@@ -50,7 +56,6 @@ def parse_approvals_flow(doc: Document) -> Tuple[int, int]:
             ProcessStep.objects.update_or_create(document=doc,
                                                  step_id=steps_id,
                                                  defaults={"name": heading[:255],
-                                                           "actor": "",
                                                            "description": line,
                                                            "predecessor_step_ids": ""})
             steps_id+=1
@@ -60,8 +65,13 @@ def parse_approvals_flow(doc: Document) -> Tuple[int, int]:
 
     chunk_pairs = add_chunks_to_chroma(doc.id, chunks, metadata={"doc_type": doc.doc_type})
 
-    for order, (cid, ctext) in enumerate(chunk_pairs):
-        TextChunk.objects.create(document=doc, chunk_id=cid, order=order, text=ctext,
-                                 embedding_dim=len(chunk_pairs[0][1]) if chunk_pairs else 0,)
-
+    for order, (cid, cemb, ctext) in enumerate(chunk_pairs):
+        hashval = hashlib.md5(ctext.encode("utf-8")).hexdigest()
+        TextChunk.objects.update_or_create(document=doc,
+                                           text_hash=hashval,
+                                           defaults={'chunk_id':cid,
+                                                     'order':order,
+                                                     'text':ctext,
+                                                     'embedding_dim':len(cemb)})
     return steps_id, len(chunks)
+

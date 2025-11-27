@@ -1,6 +1,7 @@
 import re
 from typing import Dict, List, Tuple, Any
 import pdfplumber
+import hashlib
 from core.parsers.utils import convert_to_markdown
 from core.models import Document, RegulationClause, TextChunk
 from core.vectorstore import add_chunks_to_chroma
@@ -34,7 +35,7 @@ def extract_qa_from_ura_md(path: str) -> Dict[str, str]:
     q_indices: List[Tuple[int, int]] = []
     for i, line in enumerate(lines):
         s = line.strip()
-        m = re.match(r'^[#\s]*\**Q(1[0-7]|[1-9])\.', s)
+        m = re.match(r'^[#\s]*\**Q([1-9][0-9]?)\.', s)
         if m:
             qn = int(m.group(1))
             q_indices.append((i, qn))
@@ -116,14 +117,13 @@ def chunk_markdown_by_headings(path: str, min_chars: int = 500):
 
 def parse_ura_circular(doc:Document) -> Tuple[int, int]:
     """
-    Convenience wrapper: returns (qa_dict, chunks_list).
+    Returns (qa_dict, chunks_list).
     """
     qa = extract_qa_from_ura_md(doc.path.replace(".pdf", ".md"))
     chunks = chunk_markdown_by_headings(doc.path.replace(".pdf", ".md"), min_chars=500)
 
     clause_ref = 1
     for ques, ans in qa.items():
-
         RegulationClause.objects.update_or_create(document=doc,
                                                   clause_ref=clause_ref,
                                                   defaults={"question":ques,
@@ -133,8 +133,12 @@ def parse_ura_circular(doc:Document) -> Tuple[int, int]:
 
     chunk_pairs = add_chunks_to_chroma(doc.id, chunks, metadata={"doc_type": doc.doc_type})
 
-    for order, (cid, ctext) in enumerate(chunk_pairs):
-        TextChunk.objects.create(document=doc, chunk_id=cid, order=order, text=ctext,
-                                 embedding_dim=len(chunk_pairs[0][1]) if chunk_pairs else 0)
-
+    for order, (cid, cemb, ctext) in enumerate(chunk_pairs):
+        hashval = hashlib.md5(ctext.encode("utf-8")).hexdigest()
+        TextChunk.objects.update_or_create(document=doc,
+                                           text_hash=hashval,
+                                           defaults={'chunk_id':cid,
+                                                     'order':order,
+                                                     'text':ctext,
+                                                     'embedding_dim':len(cemb)})
     return clause_ref, len(chunks)

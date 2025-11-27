@@ -1,4 +1,5 @@
 import json
+import hashlib
 from typing import List, Dict, Any, Tuple
 from core.parsers.utils import convert_to_markdown
 from core.models import Document, CostItem, TextChunk
@@ -22,7 +23,7 @@ def load_table(md_path: str) -> pd.DataFrame:
     sub = text[start:]
 
     table_start_match = re.search(r"^\| *№ *\| *Work Item", sub, flags=re.MULTILINE)
-    table_start = table_start_match.start()
+    table_start = table_start_match.start()  # position in the markdown of the table header.
 
     end_marker = "3. Civil works Cost summary table - 3"
     end_rel = sub.find(end_marker)
@@ -147,18 +148,18 @@ def extract_cost_items_from_markdown(table_text: str) -> List[Dict[str, Any]]:
 
     response = client.responses.create(model="gpt-5.1", input=prompt)
 
-    raw = response.output_text.strip()
+    raw = response.output_text.strip()  # model's text output, not the metadata, tokens etc...
 
     # Parse JSON safely
     try:
-        data = json.loads(raw)
+        data = json.loads(raw)  # structured output
     except json.JSONDecodeError:
         # Fallback: try to extract first JSON array
         import re
         m = re.search(r"\[\s*\{.*\}\s*\]", raw, re.DOTALL)
         if not m:
             raise ValueError("Model output was not valid JSON:\n" + raw)
-        data = json.loads(m.group(0))
+        data = json.loads(m.group(0))   # Parses the string into real Python objects (dicts/lists)
 
     return data
 
@@ -243,9 +244,14 @@ def parse_costing_document(doc: Document) -> Tuple[int, int]:
     chunks = chunk_markdown_by_headings(doc.path.replace(".pdf", ".md"))
     chunk_pairs = add_chunks_to_chroma(doc.id, chunks, metadata={"doc_type": doc.doc_type})
 
-    for order, (cid, ctext) in enumerate(chunk_pairs):
-        TextChunk.objects.create(document=doc, chunk_id=cid, order=order, text=ctext,
-                                 embedding_dim=len(chunk_pairs[0][1]) if chunk_pairs else 0)
+    for order, (cid, cemb, ctext) in enumerate(chunk_pairs):
+        hashval = hashlib.md5(ctext.encode("utf-8")).hexdigest()
+        TextChunk.objects.update_or_create(document=doc,
+                                           text_hash=hashval,
+                                           defaults={'chunk_id':cid,
+                                                     'order':order,
+                                                     'text':ctext,
+                                                     'embedding_dim':len(cemb)})
 
     return items_created, len(chunks)
 
