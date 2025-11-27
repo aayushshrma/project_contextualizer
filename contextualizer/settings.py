@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os  
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -33,6 +34,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 INSTALLED_APPS = [
@@ -79,6 +85,15 @@ WSGI_APPLICATION = 'contextualizer.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
+
+'''
+DATABASES = {
     'default': {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "mycontextualizerdb",
@@ -87,7 +102,7 @@ DATABASES = {
         "HOST": "127.0.0.1",
         "PORT": "5432",
     }
-}
+}'''
 
 
 # Password validation
