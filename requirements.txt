@@ -33,6 +33,7 @@ datalab-python-sdk==0.1.13
 dateparser==1.2.2
 distro==1.9.0
 Django==5.2.8
+djangorestframework==3.16.1
 docker==7.1.0
 durationpy==0.10
 et_xmlfile==2.0.0
