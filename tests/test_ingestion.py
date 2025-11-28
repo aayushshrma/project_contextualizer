@@ -1,4 +1,3 @@
-# tests/test_ingestion.py
 import os
 import pytest
 from core.models import Document, ScheduleTask, TextChunk
