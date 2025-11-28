@@ -1,15 +1,13 @@
 # tests/test_search_api.py
 import pytest
-from django.urls import reverse
 from django.test import Client
 from core.models import Document, TextChunk
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db  # granting test db access
 def test_semantic_search_api_returns_results(settings):
     """
     Ensure /search/ works and returns JSON structure.
-    We seed one TextChunk manually; in a real test, you might run a parser first.
     """
 
     client = Client()

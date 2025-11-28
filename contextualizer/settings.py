@@ -35,10 +35,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+# RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# if RENDER_EXTERNAL_HOSTNAME:
+#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # Application definition
 INSTALLED_APPS = [
@@ -84,15 +84,15 @@ WSGI_APPLICATION = 'contextualizer.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+'''
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True,
     )
-}
+}'''
 
-'''
 DATABASES = {
     'default': {
         "ENGINE": "django.db.backends.postgresql",
@@ -102,7 +102,7 @@ DATABASES = {
         "HOST": "127.0.0.1",
         "PORT": "5432",
     }
-}'''
+}
 
 
 # Password validation
